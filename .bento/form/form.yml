@@ -1,23 +1,362 @@
-name: "Example Bento Form"
-description: "Default form configuration — customize as needed"
+name: "Bentra Forms — Full Input Type Test"
+description: "Exercises every supported input type, validation, dynamic behavior, and visibility condition for QA testing."
+
 body:
-  - type: text
-    id: project_name
+  # ── TEXT INPUT ────────────────────────────────────────────────────────────
+  - type: input
+    id: text_basic
     attributes:
-      label: "Project name"
-      description: "Name of the project or resource"
-      placeholder: "my-project"
+      label: "Text Input (basic)"
+      description: "Standard text field — min 3, max 50 chars, alphanumeric only."
+      placeholder: "e.g. my-project"
+      input_type: text
+      default: ""
+    validations:
+      required: true
+      min_length: 3
+      max_length: 50
+      pattern: "^[a-zA-Z0-9-]+$"
+
+  # ── EMAIL INPUT ───────────────────────────────────────────────────────────
+  - type: input
+    id: email_field
+    attributes:
+      label: "Email Input"
+      description: "Must be a valid email address."
+      placeholder: "user@example.com"
+      input_type: email
+      default: ""
+    validations:
+      required: true
+      pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+
+  # ── PASSWORD INPUT ────────────────────────────────────────────────────────
+  - type: input
+    id: password_field
+    attributes:
+      label: "Password Input"
+      description: "Masked field — min 8 chars."
+      placeholder: "••••••••"
+      input_type: password
+      default: ""
+    validations:
+      required: true
+      min_length: 8
+
+  # ── NUMBER INPUT ──────────────────────────────────────────────────────────
+  - type: input
+    id: number_field
+    attributes:
+      label: "Number Input"
+      description: "Integer between 1 and 100, step of 5."
+      placeholder: "50"
+      input_type: number
+      default: "50"
+    validations:
+      required: true
+      min: 1
+      max: 100
+      step: 5
+
+  # ── DATE INPUT ────────────────────────────────────────────────────────────
+  - type: input
+    id: date_field
+    attributes:
+      label: "Date Input"
+      description: "Must be today or later, within the next 30 days."
+      input_type: date
+      default: ""
+    validations:
+      required: true
+      min_date: "today"
+      max_date: "today+30"
+
+  # ── TEXTAREA ──────────────────────────────────────────────────────────────
+  - type: textarea
+    id: notes_field
+    attributes:
+      label: "Textarea (plain text)"
+      description: "Multi-line notes — 20 to 500 chars."
+      placeholder: "Describe what this deployment does..."
+      rows: 5
+      render: text
+      default: ""
+    validations:
+      required: false
+      min_length: 20
+      max_length: 500
+
+  - type: textarea
+    id: markdown_field
+    attributes:
+      label: "Textarea (markdown)"
+      description: "Supports markdown preview."
+      placeholder: "## Overview\n\nDescribe..."
+      rows: 6
+      render: markdown
+      default: ""
+    validations:
+      required: false
+
+  # ── DROPDOWN (single) ─────────────────────────────────────────────────────
+  - type: dropdown
+    id: cloud_provider
+    attributes:
+      label: "Dropdown — Single Select"
+      description: "Choose your cloud provider."
+      options:
+        - value: aws
+        - value: azure
+        - value: gcp
+      default: null
+      multiple: false
     validations:
       required: true
 
-  - type: select
+  # ── DROPDOWN (multiple) ───────────────────────────────────────────────────
+  - type: dropdown
+    id: notification_channels
+    attributes:
+      label: "Dropdown — Multi Select"
+      description: "Select all notification channels to enable (hold Ctrl/Cmd)."
+      options:
+        - value: email
+        - value: slack
+        - value: pagerduty
+        - value: webhook
+      default: []
+      multiple: true
+      size: 4
+    validations:
+      required: false
+      min_selections: 1
+      max_selections: 3
+
+  # ── RADIO ─────────────────────────────────────────────────────────────────
+  - type: radio
     id: environment
     attributes:
-      label: "Environment"
+      label: "Radio Buttons"
+      description: "Choose the deployment environment."
       options:
-        - label: "Development"
-          value: "dev"
-        - label: "Production"
-          value: "prod"
+        - value: dev
+          label: Development
+        - value: staging
+          label: Staging
+        - value: prod
+          label: Production
+      default: dev
     validations:
       required: true
+
+  # ── CHECKBOXES ────────────────────────────────────────────────────────────
+  - type: checkboxes
+    id: optional_features
+    attributes:
+      label: "Checkboxes"
+      description: "Select one or more optional features to enable."
+      default: []
+      options:
+        - value: monitoring
+          label: Enable Monitoring
+          required: false
+        - value: backup
+          label: Enable Automated Backups
+          required: false
+        - value: encryption
+          label: Enable Encryption at Rest
+          required: false
+        - value: vpn
+          label: Enable VPN Access
+          required: false
+    validations:
+      required: false
+      min_selections: 0
+      max_selections: 4
+
+  # ── CASCADING DROPDOWN (dynamic options_map) ──────────────────────────────
+  - type: dropdown
+    id: region
+    attributes:
+      label: "Region (cascades from Cloud Provider)"
+      description: "Options change based on the selected cloud provider."
+      options: []
+    validations:
+      required: true
+    visibility:
+      condition: "cloud_provider != null"
+      depends_on: ["cloud_provider"]
+    dynamic:
+      options_map:
+        aws:
+          - value: us-east-1
+          - value: us-west-2
+          - value: eu-west-1
+        azure:
+          - value: eastus
+          - value: westus2
+          - value: northeurope
+        gcp:
+          - value: us-central1
+          - value: us-east1
+          - value: europe-west1
+      depends_on_field: "cloud_provider"
+
+  # ── AUTO-POPULATED FIELD (template string) ────────────────────────────────
+  - type: input
+    id: resource_name
+    attributes:
+      label: "Resource Name (auto-populated)"
+      description: "Auto-generated from project name + environment. You can override it."
+      placeholder: "auto-generated"
+      input_type: text
+      default: ""
+    dynamic:
+      auto_populate: "{text_basic}-{environment}"
+      computed: false
+      depends_on: ["text_basic", "environment"]
+    validations:
+      required: true
+
+  # ── AUTO-POPULATED DATE FIELD ─────────────────────────────────────────────
+  - type: input
+    id: deployment_date
+    attributes:
+      label: "Deployment Date (auto-populated to today)"
+      description: "Defaults to today; overridable."
+      input_type: date
+      default: ""
+    dynamic:
+      auto_populate: "today"
+      computed: false
+    validations:
+      required: true
+
+  # ── COMPUTED (read-only) FIELD ────────────────────────────────────────────
+  - type: input
+    id: resource_tag
+    attributes:
+      label: "Resource Tag (computed, read-only)"
+      description: "Derived from cloud provider + region. Cannot be edited."
+      input_type: text
+      readonly: true
+      default: ""
+    dynamic:
+      auto_populate: "{cloud_provider}-{region}"
+      computed: true
+      depends_on: ["cloud_provider", "region"]
+    visibility:
+      condition: "cloud_provider != null && region != null"
+      depends_on: ["cloud_provider", "region"]
+
+  # ── VISIBILITY: prod-only section ─────────────────────────────────────────
+  - type: checkboxes
+    id: prod_confirmations
+    attributes:
+      label: "Production Confirmations (visible only when env = prod)"
+      description: "Required acknowledgements before deploying to production."
+      default: []
+      options:
+        - value: change_approved
+          label: Change has been approved by the team
+          required: true
+        - value: runbook_ready
+          label: Runbook is up to date
+          required: true
+        - value: rollback_tested
+          label: Rollback procedure has been tested
+          required: true
+    validations:
+      required: true
+    visibility:
+      condition: "environment == 'prod'"
+      depends_on: ["environment"]
+
+  # ── VISIBILITY: backup retention (only when backup feature enabled) ────────
+  - type: input
+    id: backup_retention_days
+    attributes:
+      label: "Backup Retention (days) — visible when backup is enabled"
+      description: "How many days to retain backups. Between 1 and 365."
+      input_type: number
+      default: "30"
+    validations:
+      required: true
+      min: 1
+      max: 365
+    visibility:
+      condition: "optional_features.includes('backup')"
+      depends_on: ["optional_features"]
+
+  # ── VISIBILITY: multi-condition (AND) ─────────────────────────────────────
+  - type: textarea
+    id: encryption_config
+    attributes:
+      label: "Encryption Config (visible when encryption enabled AND cloud = aws)"
+      description: "Paste your KMS key ARN or configuration block here."
+      placeholder: "arn:aws:kms:us-east-1:123456789012:key/..."
+      rows: 3
+      render: text
+      default: ""
+    validations:
+      required: false
+    visibility:
+      condition: "optional_features.includes('encryption') && cloud_provider == 'aws'"
+      depends_on: ["optional_features", "cloud_provider"]
+
+  # ── VISIBILITY: multi-condition (OR) ──────────────────────────────────────
+  - type: input
+    id: alert_endpoint
+    attributes:
+      label: "Alert Endpoint (visible when slack OR pagerduty selected)"
+      description: "Slack webhook URL or PagerDuty routing key."
+      placeholder: "https://hooks.slack.com/..."
+      input_type: text
+      default: ""
+    validations:
+      required: false
+    visibility:
+      condition: "notification_channels.includes('slack') || notification_channels.includes('pagerduty')"
+      depends_on: ["notification_channels"]
+
+  # ── INLINE CUSTOM VALIDATOR ───────────────────────────────────────────────
+  - type: input
+    id: custom_validated_field
+    attributes:
+      label: "Custom Validator (inline Python)"
+      description: "Must be alphanumeric and longer than 5 characters."
+      placeholder: "abcdef"
+      input_type: text
+      default: ""
+    validations:
+      required: false
+      validator:
+        type: inline
+        source: "return len(value) > 5 and value.isalnum()"
+        language: python
+        params: {}
+        error_message: "Value must be alphanumeric and longer than 5 characters"
+
+  # ── INLINE AUTO-POPULATE (JavaScript expression) ──────────────────────────
+  - type: input
+    id: estimated_cost
+    attributes:
+      label: "Estimated Monthly Cost (computed via JS)"
+      description: "Rough cost estimate based on selected cloud and region."
+      input_type: text
+      readonly: true
+      default: ""
+    dynamic:
+      auto_populate:
+        type: inline
+        language: javascript
+        source: |
+          const costs = { aws: 45, azure: 42, gcp: 40 };
+          const base = costs[cloud_provider] || 0;
+          const premium = region && region.includes('eu') ? 1.15 : 1.0;
+          return '$' + (base * premium).toFixed(2) + ' / mo';
+      computed: true
+      depends_on: ["cloud_provider", "region"]
+    visibility:
+      condition: "cloud_provider != null && region != null"
+      depends_on: ["cloud_provider", "region"]
