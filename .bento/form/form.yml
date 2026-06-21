@@ -4,7 +4,7 @@ description: "Exercises every supported input type, validation, dynamic behavior
 body:
   # ── TEXT INPUT ────────────────────────────────────────────────────────────
   - type: input
-    id: text_basic_test
+    id: text_basic
     attributes:
       label: "Text Input (basic)"
       description: "Standard text field — min 3, max 50 chars, alphanumeric only."
