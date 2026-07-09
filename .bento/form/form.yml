@@ -231,12 +231,31 @@ body:
       computed: false
     validations:
       required: true
+  
+  # ── AUTO-POPULATED DATE FIELD ─────────────────────────────────────────────
+  - type: tags
+    id: resource_tags
+    attributes:
+      label: Resource Tags
+      description: Add labels for cost tracking
+      key_placeholder: key
+      value_placeholder: value
+      max_pairs: 10
+      default:
+        environment: dev
+        owner: platform-team
+    validations:
+      required: false
+      min_selections: 0    # minimum number of pairs
+      max_selections: 10   # maximum number of pairs
+      key_pattern: "^[a-z][a-z0-9_-]*$"   # regex each key must match
+      value_pattern: null                 # regex each value must match
 
   # ── COMPUTED (read-only) FIELD ────────────────────────────────────────────
   - type: input
-    id: resource_tag
+    id: input_tag
     attributes:
-      label: "Resource Tag (computed, read-only)"
+      label: "input Tag (computed, read-only)"
       description: "Derived from cloud provider + region. Cannot be edited."
       input_type: text
       readonly: true
